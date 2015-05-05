@@ -5,8 +5,8 @@ defmodule Amt do
   """
 
   def aname(email) do
-    {:ok, regex} = Regex.compile("^You have received an application for .+ from (.+)$")
-    nl = Regex.run(regex,email) |> List.last |> String.split |> Enum.map &String.capitalize/1
+    { :ok, rx } = Regex.compile(~S"You have received an application for .+ from (.+)\s+View", "ums")
+    nl = Regex.run(rx, email) |> List.last |> String.split |> Enum.map &String.capitalize/1
     Enum.join(nl, " ")
   end
 
