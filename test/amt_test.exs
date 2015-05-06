@@ -32,7 +32,7 @@ defmodule AmtTest do
 
   test "applicants's name is extracted correctly 4" do
     ts = """
-      Hi Muharem,
+      Hi Joe,
       You have received an application for IT security expert from =C3=89so Pi=
       ta
       View all applicants: https://www.linkedin.com/e/v2?e=3D4vz24-i9b044qe-3o&am

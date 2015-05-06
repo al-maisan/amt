@@ -5,7 +5,7 @@ defmodule Amt do
   """
 
   def aemail(txt) do
-    { :ok, rx } = Regex.compile(~S"Contact InformationEmail:\s+(\S+)$")
+    { :ok, rx } = Regex.compile(~S"Contact InformationEmail:\s+(\S+)")
     Regex.run(rx, txt) |> List.last
   end
 
