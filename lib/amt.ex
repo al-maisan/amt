@@ -29,19 +29,20 @@ defmodule Amt do
   end
 
   def scan_files(path) do
-    IO.inspect do_scan_files(Path.wildcard(Enum.join([path, "*.eml"], "/")), [])
+    do_scan_files(Path.wildcard(Enum.join([path, "*.eml"], "/")), []) |>
+      Enum.sort |> Enum.each(fn(x) -> IO.puts(x) end)
   end
 
   def do_scan_files([], result), do: result
 
-  def do_scan_files([h|tail], result) do
+  def do_scan_files([h|t], result) do
     { :ok, body } = File.read(h)
     name = aname(body)
     email = aemail(body)
     phone = aphone(body)
     date = adate(body)
     record = Enum.join([name, email, phone, date], ";")
-    do_scan_files(tail, [record|result])
+    do_scan_files(t, [record|result])
   end
 
   @doc """
