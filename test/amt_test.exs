@@ -30,6 +30,16 @@ defmodule AmtTest do
     assert Amt.aname(ts) == "Gulliver Jöllo"
   end
 
+  test "applicants's name is extracted correctly 4" do
+    ts = """
+      Hi Muharem,
+      You have received an application for IT security expert from =C3=89so Pi=
+      ta
+      View all applicants: https://www.linkedin.com/e/v2?e=3D4vz24-i9b044qe-3o&am
+      """
+    assert Amt.aname(ts) == "Éso Pita"
+  end
+
   test "clean_utfs deals with the utf-8 bytes correctly" do
     ts1 = """
       Gulliver J=C3=B6=
