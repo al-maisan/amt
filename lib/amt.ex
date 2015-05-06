@@ -35,14 +35,12 @@ defmodule Amt do
   def do_scan_files([], result), do: result
 
   def do_scan_files([h|tail], result) do
-    IO.inspect h
     { :ok, body } = File.read(h)
     name = aname(body)
     email = aemail(body)
     phone = aphone(body)
     date = adate(body)
     record = Enum.join([name, email, phone, date], ";")
-    IO.inspect record
     do_scan_files(tail, [result|record])
   end
 
@@ -85,7 +83,7 @@ defmodule Amt do
   """
   def clean_utfs(txt) do
     txt = Regex.replace(~R/=\r?\n/ms, txt, "", [:global])
-    utfs = Regex.scan(~r/(=[0-9A-F]{2}){2}/, txt) |> Enum.map(&List.first/1)
+    utfs = Regex.scan(~r/(=[0-9A-F]{2}){2,3}/, txt) |> Enum.map(&List.first/1)
     do_clean_utfs(utfs, txt)
   end
 
