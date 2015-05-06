@@ -31,12 +31,18 @@ defmodule AmtTest do
   end
 
   test "clean_utfs deals with the utf-8 bytes correctly" do
-    ts = """
+    ts1 = """
       Gulliver J=C3=B6=
       llo
       View
       """
-    assert Amt.clean_utfs(ts) == "Gulliver Jöllo\nView\n"
+    ts2 = """
+      Gulliver J=C3=B6=
+      llo=C3=BB
+      View
+      """
+    assert Amt.clean_utfs(ts1) == "Gulliver Jöllo\nView\n"
+    assert Amt.clean_utfs(ts2) == "Gulliver Jölloû\nView\n"
   end
 
   test "utf-8 bytes handling with 0+ occurrences" do
