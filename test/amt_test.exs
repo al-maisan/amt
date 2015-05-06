@@ -75,4 +75,11 @@ defmodule AmtTest do
     assert Amt.aphone(ts1) == "+56964956548"
   end
 
+  test "test date extraction" do
+    ts1 = """
+      Date: Mon, 4 May 2015 19:37:16 +0000 (UTC)
+      """
+    assert Amt.adate(ts1) == "Mon, 4 May 2015 19:37:16 +0000"
+  end
+
 end

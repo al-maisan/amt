@@ -14,6 +14,11 @@ defmodule Amt do
     Regex.run(rx, txt) |> List.last
   end
 
+  def adate(txt) do
+    {:ok, rx } = Regex.compile(~S"^Date:\s+(.+)\s+\(?.+$")
+    Regex.run(rx, txt) |> List.last
+  end
+
   def aname(txt) do
     txt = clean_utfs(txt)
     { :ok, rx } = Regex.compile(~S"You have received an application for .+ from (.+)\s+View", "ums")
