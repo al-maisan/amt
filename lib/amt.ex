@@ -9,6 +9,11 @@ defmodule Amt do
     Regex.run(rx, txt) |> List.last
   end
 
+  def aphone(txt) do
+    {:ok, rx } = Regex.compile(~S"Phone:\s*(\+?[\d\s]+\d)")
+    Regex.run(rx, txt) |> List.last
+  end
+
   def aname(txt) do
     txt = clean_utfs(txt)
     { :ok, rx } = Regex.compile(~S"You have received an application for .+ from (.+)\s+View", "ums")

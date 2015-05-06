@@ -68,4 +68,11 @@ defmodule AmtTest do
     assert Amt.aemail(ts1) == "abx.fgh@exact.ly"
   end
 
+  test "test phone extraction" do
+    ts1 = """
+      Phone: +56964956548
+      """
+    assert Amt.aphone(ts1) == "+56964956548"
+  end
+
 end
