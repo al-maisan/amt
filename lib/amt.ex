@@ -4,10 +4,15 @@ defmodule Amt do
   LinkedIn and creates a CSV formatted data sheet (delimited by ';').
   """
 
-  def aname(email) do
-    email = clean_utfs(email)
+  def aemail(txt) do
+    { :ok, rx } = Regex.compile(~S"Contact InformationEmail:\s+(\S+)$")
+    Regex.run(rx, txt) |> List.last
+  end
+
+  def aname(txt) do
+    txt = clean_utfs(txt)
     { :ok, rx } = Regex.compile(~S"You have received an application for .+ from (.+)\s+View", "ums")
-    nl = Regex.run(rx, email) |> List.last |> String.split |> Enum.map &String.capitalize/1
+    nl = Regex.run(rx, txt) |> List.last |> String.split |> Enum.map &String.capitalize/1
     Enum.join(nl, " ")
   end
 

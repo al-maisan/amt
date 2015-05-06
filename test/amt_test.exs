@@ -60,4 +60,12 @@ defmodule AmtTest do
     assert Amt.do_clean_utfs(["=c3=b6"], "J=c3=b6llo") == "Jöllo"
     assert Amt.do_clean_utfs(["=c3=b6", "=c3=bb"], "J=c3=b6llo=c3=bb") == "Jölloû"
   end
+
+  test "test email extraction" do
+    ts1 = """
+      Contact InformationEmail: abx.fgh@exact.ly
+      """
+    assert Amt.aemail(ts1) == "abx.fgh@exact.ly"
+  end
+
 end
