@@ -29,7 +29,7 @@ defmodule Amt do
   end
 
   def scan_files(path) do
-    IO.puts do_scan_files(Path.wildcard(Enum.join([path, "*.eml"], "/")), [])
+    IO.inspect do_scan_files(Path.wildcard(Enum.join([path, "*.eml"], "/")), [])
   end
 
   def do_scan_files([], result), do: result
@@ -41,7 +41,7 @@ defmodule Amt do
     phone = aphone(body)
     date = adate(body)
     record = Enum.join([name, email, phone, date], ";")
-    do_scan_files(tail, [result|record])
+    do_scan_files(tail, [record|result])
   end
 
   @doc """
