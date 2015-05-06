@@ -7,7 +7,12 @@ defmodule Amt.Mixfile do
      elixir: "~> 1.1-dev",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
+     escript: escript,
      deps: deps]
+  end
+
+  def escript do
+    [main_module: Amt]
   end
 
   # Configuration for the OTP application
