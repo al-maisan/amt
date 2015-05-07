@@ -105,3 +105,49 @@ defmodule AmtTest do
   end
 
 end
+
+
+defmodule AmtFilesTest do
+  use ExUnit.Case, async: false
+
+
+  setup context do
+    {tp, _} = System.cmd("mktemp", ["-d"])
+    tp = String.rstrip(tp)
+    IO.puts "created tmp dir #{tp}"
+
+    if cd = context[:content] do
+      {fpath, _} = System.cmd("mktemp", ["-p", tp])
+      fpath = String.rstrip(fpath)
+      IO.puts "file path: #{fpath}"
+      write_file(fpath, context[:content])
+    end
+
+    on_exit fn ->
+      IO.puts "removing tmp dir #{tp}"
+      System.cmd("rm", ["-rf", tp])
+    end
+
+    {:ok, tmpp: tp}
+  end
+
+  @tag content: ["""
+    abc
+    def
+    123
+    """, """
+    xBc
+    yEf
+    987
+    """ ]
+  test "always pass", context do
+    assert context[:tmpp] ==  "/tmp/x123abz"
+  end
+
+  def write_file(path, content) do
+    {:ok, file} = File.open path, [:write]
+    IO.binwrite file, content
+    File.close file
+  end
+
+end
