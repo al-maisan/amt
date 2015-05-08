@@ -111,39 +111,32 @@ defmodule AmtFilesTest do
   use ExUnit.Case
 
   setup context do
-    {tp, 0} = System.cmd("mktemp", ["-d"])
-    tp = String.rstrip(tp)
-
-    if cd = context[:content] do
-      cd |> Enum.map(fn x ->
-        {fpath, 0} = System.cmd("mktemp", ["-p", tp, "exu.XXXXX.amt"])
-        fpath = String.rstrip(fpath)
-        write_file(fpath, x)
-      end)
-    end
+    {fpath, 0} = System.cmd("mktemp", ["exu.XXXXX.amt"])
+    fpath = String.rstrip(fpath)
+    write_file(fpath, context[:content])
 
     on_exit fn ->
-      #System.cmd("rm", ["-rf", tp])
+      System.cmd("rm", ["-f", fpath])
     end
 
-    {:ok, tmpp: tp}
+    {:ok, fpath: fpath}
   end
 
-  @tag content: ["""
-    abc
-    123
-    """, """
-    xBc
-    987
-    """ ]
-  test "read_files works", context do
-    actual = sorted_values(Amt.read_files(context[:tmpp], ".amt"))
-    expected = sorted_values([ok: "xBc\n987\n", ok: "abc\n123\n"])
+  @tag content: """
+    To: xyz <xyz@example.com>
+    Date: Mon, 4 May 2015 22:40:57 +0000 (UTC)
+    X-LinkedIn-Class: EMAIL-DEFAULT
+    Hi Joe,
+    You have received an application for IT security expert from =C3=89so Pi=
+    ta
+    View all applicants: https://www.example.com/e/v2?e=3D4vz24.b044qe-3o&am
+    Contact InformationEmail: cde.fgh@exact.ly
+    Phone: +56964956548
+    """
+  test "do_scan_file works", context do
+    expected = "Éso Pita;cde.fgh@exact.ly;+56964956548;Mon, 4 May 2015 22:40:57 +0000"
+    actual = Amt.do_scan_file(context[:fpath])
     assert actual == expected
-  end
-
-  defp sorted_values(vs) do
-    vs |> Enum.map(fn({:ok, x}) -> x end) |> Enum.sort
   end
 
   defp write_file(path, content) do
@@ -151,5 +144,4 @@ defmodule AmtFilesTest do
     IO.binwrite file, content
     File.close file
   end
-
 end

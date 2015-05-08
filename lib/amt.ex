@@ -29,24 +29,24 @@ defmodule Amt do
   end
 
   def scan_files(path) do
-    files = read_files(path, ".eml")
-    do_scan_files(files, []) |> Enum.sort |> Enum.each(fn(x) -> IO.puts(x) end)
+    me = self
+    Path.wildcard(path <> "/*.eml")
+    |>  Enum.map(fn(fpath) ->
+          spawn_link fn -> (send me, {self, do_scan_file(fpath)}) end
+        end)
+    |>  Enum.map(fn(_) ->
+          receive do {_, result} -> result end
+        end)
+    |> Enum.sort |> Enum.each(fn(x) -> IO.puts(x) end)
   end
 
-  def read_files(path, ext \\ "") do
-    wc = path <> "/" <> "*" <> ext
-    Path.wildcard(wc) |> Enum.map(&File.read/1)
-  end
-
-  def do_scan_files([], result), do: result
-
-  def do_scan_files([{:ok, body}|t], result) do
+  def do_scan_file(path) do
+    {:ok, body} = File.read(path)
     name = aname(body)
     email = aemail(body)
     phone = aphone(body)
     date = adate(body)
-    record = Enum.join([name, email, phone, date], ";")
-    do_scan_files(t, [record|result])
+    Enum.join([name, email, phone, date], ";")
   end
 
   @doc """
