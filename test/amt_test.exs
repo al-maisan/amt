@@ -48,11 +48,11 @@ defmodule AmtTest do
   test "applicants's name is extracted correctly 5" do
     ts = """
       Hi Joe,
-      You have received an application for dat dreamer from Xavo Rappaso=
+      You have received an application for day dreamer from Xavo Rappaso=
       le MBA, MSc, BA Open
       View all applicants: https://www.example.com/e/v2?e=3D4vz24.a9v2r7-1f&am=
       """
-    assert Amt.aname(ts) == {"dat dreamer", "Xavo Rappasole Mba, Msc, Ba Open"}
+    assert Amt.aname(ts) == {"day dreamer", "Xavo Rappasole Mba, Msc, Ba Open"}
   end
 
 
