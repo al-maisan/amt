@@ -5,12 +5,14 @@ defmodule Amt do
   """
 
   def main(argv) do
-    { parse, _, _ } = OptionParser.parse(argv, strict: [help: :boolean, path: :string])
+    { parse, _, _ } = OptionParser.parse(
+      argv, strict: [help: :boolean, show_pos: :boolean, path: :string])
+
     if parse[:help] == true do
       print_help()
     end
     if parse[:path] != nil do
-       scan_files(parse[:path])
+      scan_files(parse[:path], parse[:show_pos])
     else
       print_help()
     end
@@ -28,11 +30,11 @@ defmodule Amt do
     IO.puts help_text
   end
 
-  def scan_files(path) do
+  def scan_files(path, show_pos \\ false) do
     me = self
     Path.wildcard(path <> "/*.eml")
     |>  Enum.map(fn(fpath) ->
-          spawn_link fn -> (send me, {self, do_scan_file(fpath)}) end
+          spawn_link fn -> (send me, {self, do_scan_file(fpath, show_pos)}) end
         end)
     |>  Enum.map(fn(_) ->
           receive do {_, result} -> result end
@@ -40,13 +42,17 @@ defmodule Amt do
     |> Enum.sort |> Enum.each(fn(x) -> IO.puts(x) end)
   end
 
-  def do_scan_file(path) do
+  def do_scan_file(path, show_pos \\ false) do
     {:ok, body} = File.read(path)
-    name = aname(body)
+    {pos, name} = aname(body)
     email = aemail(body)
     phone = aphone(body)
     date = adate(body)
-    Enum.join([name, email, phone, date], ";")
+    if show_pos do
+      Enum.join([pos, name, email, phone, date], ";")
+    else
+      Enum.join([name, email, phone, date], ";")
+    end
   end
 
   @doc """
@@ -62,7 +68,10 @@ defmodule Amt do
   """
   def aphone(txt) do
     {:ok, rx } = Regex.compile(~S"Phone:\s*(\+?[\d\s]+\d)", "ums")
-    Regex.run(rx, txt) |> List.last
+    case Regex.run(rx, txt) do
+      [_, phone] -> phone
+      nil -> "N/A"
+    end
   end
 
   @doc """
@@ -74,14 +83,15 @@ defmodule Amt do
   end
 
   @doc """
-  Extract the applicant's name from the LinkedIn email.
+  Extract the name of the open position and the applicant's name from the
+  LinkedIn email.
   """
   def aname(txt) do
     txt = clean_utfs(txt)
-    { :ok, rx } = Regex.compile(~S"You have received an application for .+ from (.+)\s+View", "ums")
-    nl = Regex.run(rx, txt) |> List.last |> String.split
-      |> Enum.map &String.capitalize/1
-    Enum.join(nl, " ")
+    { :ok, rx } = Regex.compile(~S"You have received an application for (.+) from (.+)\s+View", "ums")
+    [_, pos, name] = Regex.run(rx, txt)
+    name = String.split(name) |> Enum.map &String.capitalize/1
+    {pos, Enum.join(name, " ")}
   end
 
   @doc """

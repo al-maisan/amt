@@ -5,59 +5,59 @@ defmodule AmtTest do
   test "applicants's name is extracted correctly 1" do
     ts = """
       Hi Joe,
-      You have received an application for IT security expert from jaNE dOe
+      You have received an application for bitcoin guru from jaNE dOe
       View all applicants: https://www.example.com/e/v2?e=3D4vz24.agdvcw-c&amp=
       """
-    assert Amt.aname(ts) == "Jane Doe"
+    assert Amt.aname(ts) == {"bitcoin guru", "Jane Doe"}
   end
 
   test "applicants's name is extracted correctly 2" do
     ts = """
       Hi Joe,
-      You have received an application for IT security expert from chArlY dE gauLLe
+      You have received an application for chief troublemaker from chArlY dE gauLLe
       View all applicants: https://www.example.com/e/v2?e=3D4vz24.agdvcw-c&amp=
       """
-    assert Amt.aname(ts) == "Charly De Gaulle"
+    assert Amt.aname(ts) == {"chief troublemaker", "Charly De Gaulle"}
   end
 
   test "applicants's name is extracted correctly 3" do
     ts = """
       Hi Joe,
-      You have received an application for IT security expert from Gulliver J=C3=B6=
+      You have received an application for pointy-haired guy from Gulliver J=C3=B6=
       llo
       View all applicants: https://www.example.com/e/v2?e=3D4vz24.aageqh-1t&am=
       """
-    assert Amt.aname(ts) == "Gulliver Jöllo"
+    assert Amt.aname(ts) == {"pointy-haired guy", "Gulliver Jöllo"}
   end
 
   test "applicants's name is extracted correctly 4" do
     ts = """
       Hi Joe,
-      You have received an application for IT security expert from =C3=89so Pi=
+      You have received an application for marketroid from =C3=89so Pi=
       ta
       View all applicants: https://www.example.com/e/v2?e=3D4vz24.b044qe-3o&am
       """
-    assert Amt.aname(ts) == "Éso Pita"
+    assert Amt.aname(ts) == {"marketroid", "Éso Pita"}
   end
 
   test "applicants's name is extracted correctly 5" do
     ts = """
       Hi Joe,
-      You have received an application for IT security expert from Xavo Rappaso=
+      You have received an application for code monkey from Xavo Rappaso=
       le MBA, MSc, BA Open
       View all applicants: https://www.example.com/e/v2?e=3D4vz24.a9v2r7-1f&am=
       """
-    assert Amt.aname(ts) == "Xavo Rappasole Mba, Msc, Ba Open"
+    assert Amt.aname(ts) == {"code monkey", "Xavo Rappasole Mba, Msc, Ba Open"}
   end
 
   test "applicants's name is extracted correctly 6" do
     ts = """
       Hi Joe,
-      You have received an application for IT security expert from Gagga Randp=
+      You have received an application for keyboard trasher from Gagga Randp=
       ek
       View all applicants: https://www.example.com/e/v2?e=3D4vz24.a9v2r7-1f&am=
       """
-    assert Amt.aname(ts) == "Gagga Randpek"
+    assert Amt.aname(ts) == {"keyboard trasher", "Gagga Randpek"}
   end
 
   test "clean_utfs deals with the utf-8 bytes correctly" do
@@ -88,11 +88,18 @@ defmodule AmtTest do
     assert Amt.aemail(ts1) == "abx.fgh@exact.ly"
   end
 
-  test "test phone extraction" do
+  test "test phone extraction with a number supplied" do
     ts1 = """
       Phone: +56964956548
       """
     assert Amt.aphone(ts1) == "+56964956548"
+  end
+
+  test "test phone extraction w/o a supplied number" do
+    ts1 = """
+      No phone number supplied :(
+      """
+    assert Amt.aphone(ts1) == "N/A"
   end
 
   test "test date extraction" do
@@ -127,7 +134,7 @@ defmodule AmtFilesTest do
     Date: Mon, 4 May 2015 22:40:57 +0000 (UTC)
     X-LinkedIn-Class: EMAIL-DEFAULT
     Hi Joe,
-    You have received an application for IT security expert from =C3=89so Pi=
+    You have received an application for saure-Gurken-Einmacher from =C3=89so Pi=
     ta
     View all applicants: https://www.example.com/e/v2?e=3D4vz24.b044qe-3o&am
     Contact InformationEmail: cde.fgh@exact.ly
@@ -136,6 +143,23 @@ defmodule AmtFilesTest do
   test "do_scan_file() works", context do
     expected = "Éso Pita;cde.fgh@exact.ly;+56964956548;Mon, 4 May 2015 22:40:57 +0000"
     actual = Amt.do_scan_file(context[:fpath])
+    assert actual == expected
+  end
+
+  @tag content: """
+    To: xbt <xbt@example.com>
+    Date: Mon, 8 June 2017 12:54:32 +0000 (UTC)
+    X-LinkedIn-Class: EMAIL-DEFAULT
+    Hi Joe,
+    You have received an application for millionaire from Gulliver J=C3=B6=
+    llo
+    View all applicants: https://www.example.com/e/v2?e=3D4vz24.b044qe-3o&am
+    Contact InformationEmail: cdg.wtg@ultimate.ly
+    Phone: +469659560575
+    """
+  test "do_scan_file() prepends the name of the open position", context do
+    expected = "millionaire;Gulliver Jöllo;cdg.wtg@ultimate.ly;+469659560575;Mon, 8 June 2017 12:54:32 +0000"
+    actual = Amt.do_scan_file(context[:fpath], true)
     assert actual == expected
   end
 
