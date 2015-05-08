@@ -2,6 +2,7 @@ defmodule AmtTest do
   use ExUnit.Case
   doctest Amt
 
+
   test "applicants's name is extracted correctly 1" do
     ts = """
       Hi Joe,
@@ -11,6 +12,7 @@ defmodule AmtTest do
     assert Amt.aname(ts) == {"bitcoin guru", "Jane Doe"}
   end
 
+
   test "applicants's name is extracted correctly 2" do
     ts = """
       Hi Joe,
@@ -19,6 +21,7 @@ defmodule AmtTest do
       """
     assert Amt.aname(ts) == {"chief troublemaker", "Charly De Gaulle"}
   end
+
 
   test "applicants's name is extracted correctly 3" do
     ts = """
@@ -30,6 +33,7 @@ defmodule AmtTest do
     assert Amt.aname(ts) == {"pointy-haired guy", "Gulliver Jöllo"}
   end
 
+
   test "applicants's name is extracted correctly 4" do
     ts = """
       Hi Joe,
@@ -40,15 +44,17 @@ defmodule AmtTest do
     assert Amt.aname(ts) == {"marketroid", "Éso Pita"}
   end
 
+
   test "applicants's name is extracted correctly 5" do
     ts = """
       Hi Joe,
-      You have received an application for code monkey from Xavo Rappaso=
+      You have received an application for dat dreamer from Xavo Rappaso=
       le MBA, MSc, BA Open
       View all applicants: https://www.example.com/e/v2?e=3D4vz24.a9v2r7-1f&am=
       """
-    assert Amt.aname(ts) == {"code monkey", "Xavo Rappasole Mba, Msc, Ba Open"}
+    assert Amt.aname(ts) == {"dat dreamer", "Xavo Rappasole Mba, Msc, Ba Open"}
   end
+
 
   test "applicants's name is extracted correctly 6" do
     ts = """
@@ -59,6 +65,7 @@ defmodule AmtTest do
       """
     assert Amt.aname(ts) == {"keyboard trasher", "Gagga Randpek"}
   end
+
 
   test "clean_utfs deals with the utf-8 bytes correctly" do
     ts1 = """
@@ -75,11 +82,13 @@ defmodule AmtTest do
     assert Amt.clean_utfs(ts2) == "Gulliver Jölloû\nView\n"
   end
 
+
   test "utf-8 bytes handling with 0+ occurrences" do
     assert Amt.do_clean_utfs([], "expected") == "expected"
     assert Amt.do_clean_utfs(["=c3=b6"], "J=c3=b6llo") == "Jöllo"
     assert Amt.do_clean_utfs(["=c3=b6", "=c3=bb"], "J=c3=b6llo=c3=bb") == "Jölloû"
   end
+
 
   test "test email extraction" do
     ts1 = """
@@ -88,6 +97,7 @@ defmodule AmtTest do
     assert Amt.aemail(ts1) == "abx.fgh@exact.ly"
   end
 
+
   test "test phone extraction with a number supplied" do
     ts1 = """
       Phone: +56964956548
@@ -95,12 +105,14 @@ defmodule AmtTest do
     assert Amt.aphone(ts1) == "+56964956548"
   end
 
+
   test "test phone extraction w/o a supplied number" do
     ts1 = """
       No phone number supplied :(
       """
     assert Amt.aphone(ts1) == "N/A"
   end
+
 
   test "test date extraction" do
     ts1 = """
@@ -114,8 +126,12 @@ defmodule AmtTest do
 end
 
 
+# -------------------------------------------------------------
+
+
 defmodule AmtFilesTest do
   use ExUnit.Case
+
 
   setup context do
     {fpath, 0} = System.cmd("mktemp", ["exu.XXXXX.amt"])
@@ -128,6 +144,7 @@ defmodule AmtFilesTest do
 
     {:ok, fpath: fpath}
   end
+
 
   @tag content: """
     To: xyz <xyz@example.com>
@@ -146,6 +163,7 @@ defmodule AmtFilesTest do
     assert actual == expected
   end
 
+
   @tag content: """
     To: xbt <xbt@example.com>
     Date: Mon, 8 June 2017 12:54:32 +0000 (UTC)
@@ -162,6 +180,7 @@ defmodule AmtFilesTest do
     actual = Amt.do_scan_file(context[:fpath], true)
     assert actual == expected
   end
+
 
   defp write_file(path, content) do
     {:ok, file} = File.open path, [:write]
