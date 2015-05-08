@@ -108,24 +108,22 @@ end
 
 
 defmodule AmtFilesTest do
-  use ExUnit.Case, async: false
-
+  use ExUnit.Case
 
   setup context do
-    {tp, _} = System.cmd("mktemp", ["-d"])
+    {tp, 0} = System.cmd("mktemp", ["-d"])
     tp = String.rstrip(tp)
-    IO.puts "created tmp dir #{tp}"
 
     if cd = context[:content] do
-      {fpath, _} = System.cmd("mktemp", ["-p", tp])
-      fpath = String.rstrip(fpath)
-      IO.puts "file path: #{fpath}"
-      write_file(fpath, context[:content])
+      cd |> Enum.map(fn x ->
+        {fpath, 0} = System.cmd("mktemp", ["-p", tp, "exu.XXXXX.amt"])
+        fpath = String.rstrip(fpath)
+        write_file(fpath, x)
+      end)
     end
 
     on_exit fn ->
-      IO.puts "removing tmp dir #{tp}"
-      System.cmd("rm", ["-rf", tp])
+      #System.cmd("rm", ["-rf", tp])
     end
 
     {:ok, tmpp: tp}
@@ -133,18 +131,22 @@ defmodule AmtFilesTest do
 
   @tag content: ["""
     abc
-    def
     123
     """, """
     xBc
-    yEf
     987
     """ ]
-  test "always pass", context do
-    assert context[:tmpp] ==  "/tmp/x123abz"
+  test "read_files works", context do
+    actual = sorted_values(Amt.read_files(context[:tmpp], ".amt"))
+    expected = sorted_values([ok: "xBc\n987\n", ok: "abc\n123\n"])
+    assert actual == expected
   end
 
-  def write_file(path, content) do
+  defp sorted_values(vs) do
+    vs |> Enum.map(fn({:ok, x}) -> x end) |> Enum.sort
+  end
+
+  defp write_file(path, content) do
     {:ok, file} = File.open path, [:write]
     IO.binwrite file, content
     File.close file
