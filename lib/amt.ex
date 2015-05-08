@@ -24,12 +24,19 @@ defmodule Amt do
       LinkedIn and extracts the applicants' name, email, phone and
       date of application.
 
-        --help      prints this help
-        --path P    looks for *.eml file to scan in this drectory
+        --help      print this help
+        --path P    look for *.eml file to scan in this drectory
+        --show-pos  show the position the person applied for as well
       """
     IO.puts help_text
   end
 
+
+  @doc """
+  Extract the data from the applicants' emails, sort the CSV records
+  and print them to stdout. Every email is scanned in its own erlang
+  process.
+  """
   def scan_files(path, show_pos \\ false) do
     me = self
     Path.wildcard(path <> "/*.eml")
@@ -42,6 +49,11 @@ defmodule Amt do
     |> Enum.sort |> Enum.each(fn(x) -> IO.puts(x) end)
   end
 
+
+  @doc """
+  Extract the data from the applicants' emails and return a CSV record
+  (where the fields are delimited by a ';').
+  """
   def do_scan_file(path, show_pos \\ false) do
     {:ok, body} = File.read(path)
     {pos, name} = aname(body)
@@ -55,6 +67,7 @@ defmodule Amt do
     end
   end
 
+
   @doc """
   Extract the applicant's email address from the LinkedIn email.
   """
@@ -62,6 +75,7 @@ defmodule Amt do
     { :ok, rx } = Regex.compile(~S"Contact InformationEmail:\s+(\S+)", "ums")
     Regex.run(rx, txt) |> List.last
   end
+
 
   @doc """
   Extract the applicant's phone number from the LinkedIn email.
@@ -74,6 +88,7 @@ defmodule Amt do
     end
   end
 
+
   @doc """
   Extract the applicant's date of application from the LinkedIn email.
   """
@@ -81,6 +96,7 @@ defmodule Amt do
     {:ok, rx } = Regex.compile(~S"^Date:\s+(.+)\s+\(.+$", "um")
     Regex.run(rx, txt) |> List.last
   end
+
 
   @doc """
   Extract the name of the open position and the applicant's name from the
@@ -94,6 +110,7 @@ defmodule Amt do
     {pos, Enum.join(name, " ")}
   end
 
+
   @doc """
   Convert UTF-8 bytes back to unicode runes.
   """
@@ -103,8 +120,12 @@ defmodule Amt do
     do_clean_utfs(utfs, txt)
   end
 
-  def do_clean_utfs([], txt), do: txt
 
+  @doc """
+  Tail recursive function that does the actual work of converting UTF-8
+  bytes back to unicode runes.
+  """
+  def do_clean_utfs([], txt), do: txt
   def do_clean_utfs([utf|tail], txt) do
     rune = String.split(utf, "=", trim: true)
       |> Enum.map(fn x -> String.to_integer(x, 16) end)
