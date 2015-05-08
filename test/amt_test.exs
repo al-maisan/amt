@@ -133,7 +133,7 @@ defmodule AmtFilesTest do
     Contact InformationEmail: cde.fgh@exact.ly
     Phone: +56964956548
     """
-  test "do_scan_file works", context do
+  test "do_scan_file() works", context do
     expected = "Éso Pita;cde.fgh@exact.ly;+56964956548;Mon, 4 May 2015 22:40:57 +0000"
     actual = Amt.do_scan_file(context[:fpath])
     assert actual == expected

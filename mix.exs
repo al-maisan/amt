@@ -3,8 +3,9 @@ defmodule Amt.Mixfile do
 
   def project do
     [app: :amt,
-     version: "0.0.1",
+     version: "0.1.0-dev",
      elixir: "~> 1.1-dev",
+     source_url: "https://github.com/al-maisan/amt",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      escript: escript,
@@ -32,6 +33,7 @@ defmodule Amt.Mixfile do
   #
   # Type `mix help deps` for more examples and options
   defp deps do
-    []
+    [{:earmark, "~> 0.1", only: :dev},
+     {:ex_doc, "~> 0.7", only: :dev}]
   end
 end
