@@ -6,13 +6,17 @@ defmodule Amt do
 
   def main(argv) do
     { parse, _, _ } = OptionParser.parse(
-      argv, strict: [help: :boolean, show_pos: :boolean, path: :string])
+      argv, strict: [help: :boolean, seq: :boolean, show_pos: :boolean, path: :string])
 
     if parse[:help] == true do
       print_help()
     end
     if parse[:path] != nil do
-      scan_files(parse[:path], parse[:show_pos])
+      if parse[:seq] do
+        scan_files_sequentially(parse[:path], parse[:show_pos])
+      else
+        scan_files(parse[:path], parse[:show_pos])
+      end
     else
       print_help()
     end
@@ -26,6 +30,7 @@ defmodule Amt do
 
         --help      print this help
         --path P    look for *.eml file to scan in this drectory
+        --seq       scan files sequentially in the same process
         --show-pos  show the position the person applied for as well
       """
     IO.puts help_text
@@ -46,6 +51,18 @@ defmodule Amt do
     |>  Enum.map(fn(_) ->
           receive do {_, result} -> result end
         end)
+    |> Enum.sort |> Enum.each(fn(x) -> IO.puts(x) end)
+  end
+
+
+  @doc """
+  Extract the data from the applicants' emails, sort the CSV records
+  and print them to stdout. Email are scanned sequentially by the same
+  process.
+  """
+  def scan_files_sequentially(path, show_pos \\ false) do
+    Path.wildcard(path <> "/*.eml")
+    |> Enum.map(fn x -> do_scan_file(x, show_pos) end)
     |> Enum.sort |> Enum.each(fn(x) -> IO.puts(x) end)
   end
 
