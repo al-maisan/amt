@@ -22,32 +22,12 @@ defmodule Amt do
 
   @doc """
   Extract the data from the applicants' emails, sort the CSV records
-  and print them to stdout. Email are scanned sequentially by the same
+  and print them to stdout. Emails are scanned sequentially by the same
   process.
   """
   def scan_files_sequentially(path, show_pos \\ false) do
     Path.wildcard(path <> "/*.eml")
     |> Enum.map(fn x -> scan_file(x, show_pos) end) |> Enum.sort
-  end
-
-
-  @doc """
-  Extract the data from the applicants' emails, sort the CSV records
-  and print them to stdout. Every email is scanned in its own erlang
-  process.
-  """
-  def scan_files(path, show_pos \\ false) do
-    me = self
-    Path.wildcard(path <> "/*.eml")
-    |>  Enum.map(fn(fpath) ->
-          spawn_link fn ->
-            send me, {self, scan_file(fpath, show_pos)}
-          end
-        end)
-    |>  Enum.map(fn(_) ->
-          receive do {_, result} -> result end
-        end)
-    |> Enum.sort
   end
 
 
@@ -133,6 +113,26 @@ defmodule Amt do
       |> :erlang.list_to_binary
     txt = String.replace(txt, utf, rune)
     do_clean_utfs(tail, txt)
+  end
+
+
+  @doc """
+  Extract the data from the applicants' emails, sort the CSV records
+  and print them to stdout. Every email is scanned inside a dedicated
+  erlang process.
+  """
+  def scan_files(path, show_pos \\ false) do
+    me = self
+    Path.wildcard(path <> "/*.eml")
+    |>  Enum.map(fn(fpath) ->
+          spawn_link fn ->
+            send me, {self, scan_file(fpath, show_pos)}
+          end
+        end)
+    |>  Enum.map(fn(_) ->
+          receive do {_, result} -> result end
+        end)
+    |> Enum.sort
   end
 
 
