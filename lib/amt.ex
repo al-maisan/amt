@@ -46,7 +46,9 @@ defmodule Amt do
     me = self
     Path.wildcard(path <> "/*.eml")
     |>  Enum.map(fn(fpath) ->
-          spawn_link fn -> (send me, {self, do_scan_file(fpath, show_pos)}) end
+          spawn_link fn ->
+            send me, {self, do_scan_file(fpath, show_pos)}
+          end
         end)
     |>  Enum.map(fn(_) ->
           receive do {_, result} -> result end
