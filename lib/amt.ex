@@ -12,11 +12,12 @@ defmodule Amt do
       print_help()
     end
     if parse[:path] != nil do
-      if parse[:seq] do
+      data = if parse[:seq] do
         scan_files_sequentially(parse[:path], parse[:show_pos])
       else
         scan_files(parse[:path], parse[:show_pos])
       end
+      data |> Enum.each(fn(x) -> IO.puts(x) end)
     else
       print_help()
     end
@@ -53,7 +54,7 @@ defmodule Amt do
     |>  Enum.map(fn(_) ->
           receive do {_, result} -> result end
         end)
-    |> Enum.sort |> Enum.each(fn(x) -> IO.puts(x) end)
+    |> Enum.sort
   end
 
 
@@ -64,8 +65,7 @@ defmodule Amt do
   """
   def scan_files_sequentially(path, show_pos \\ false) do
     Path.wildcard(path <> "/*.eml")
-    |> Enum.map(fn x -> do_scan_file(x, show_pos) end)
-    |> Enum.sort |> Enum.each(fn(x) -> IO.puts(x) end)
+    |> Enum.map(fn x -> do_scan_file(x, show_pos) end) |> Enum.sort
   end
 
 

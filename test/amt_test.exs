@@ -90,7 +90,7 @@ defmodule AmtTest do
   end
 
 
-  test "test email extraction" do
+  test "test email address extraction" do
     ts1 = """
       Contact InformationEmail: abx.fgh@exact.ly
       """
@@ -98,7 +98,7 @@ defmodule AmtTest do
   end
 
 
-  test "test phone extraction with a number supplied" do
+  test "test phone number extraction with a number supplied" do
     ts1 = """
       Phone: +56964956548
       """
@@ -106,7 +106,7 @@ defmodule AmtTest do
   end
 
 
-  test "test phone extraction w/o a supplied number" do
+  test "test phone number extraction w/o a supplied number" do
     ts1 = """
       No phone number supplied :(
       """
@@ -178,6 +178,81 @@ defmodule AmtFilesTest do
   test "do_scan_file() prepends the name of the open position", context do
     expected = "millionaire;Gulliver Jöllo;cdg.wtg@ultimate.ly;+469659560575;Mon, 8 June 2017 12:54:32 +0000"
     actual = Amt.do_scan_file(context[:fpath], true)
+    assert actual == expected
+  end
+
+
+  defp write_file(path, content) do
+    {:ok, file} = File.open path, [:write]
+    IO.binwrite file, content
+    File.close file
+  end
+end
+
+
+# -------------------------------------------------------------
+
+
+defmodule AmtMultiFilesTest do
+  use ExUnit.Case
+
+
+  @test_files_content ["""
+    To: xyz <xyz@example.com>
+    Date: Mon, 4 May 2015 22:40:57 +0000 (UTC)
+    X-LinkedIn-Class: EMAIL-DEFAULT
+    Hi Joe,
+    You have received an application for saure-Gurken-Einmacher from =C3=89so Pi=
+    ta
+    View all applicants: https://www.example.com/e/v2?e=3D4vz24.b044qe-3o&am
+    Contact InformationEmail: cde.fgh@exact.ly
+    Phone: +56964956548
+    """, """
+    To: xbt <xbt@example.com>
+    Date: Mon, 8 June 2017 12:54:32 +0000 (UTC)
+    X-LinkedIn-Class: EMAIL-DEFAULT
+    Hi Joe,
+    You have received an application for millionaire from Gulliver J=C3=B6=
+    llo
+    View all applicants: https://www.example.com/e/v2?e=3D4vz24.b044qe-3o&am
+    Contact InformationEmail: cdg.wtg@ultimate.ly
+    Phone: +469659560575
+    """]
+
+
+  setup context do
+    {tpath, 0} = System.cmd("mktemp", ["-d"])
+    tpath = String.rstrip(tpath)
+    context[:test_data] |> Enum.map(fn x ->
+      {fpath, 0} = System.cmd("mktemp", ["-p", tpath, "amt.XXXXX.eml"])
+      fpath = String.rstrip(fpath)
+      write_file(fpath, x)
+    end)
+
+    on_exit fn ->
+      System.cmd("rm", ["-rf", tpath])
+    end
+
+    {:ok, tpath: tpath}
+  end
+
+
+  @tag test_data: @test_files_content
+  test "scan_files() works", context do
+    expected = [
+      "millionaire;Gulliver Jöllo;cdg.wtg@ultimate.ly;+469659560575;Mon, 8 June 2017 12:54:32 +0000",
+      "saure-Gurken-Einmacher;Éso Pita;cde.fgh@exact.ly;+56964956548;Mon, 4 May 2015 22:40:57 +0000"]
+    actual = Amt.scan_files(context[:tpath], true)
+    assert actual == expected
+  end
+
+
+  @tag test_data: @test_files_content
+  test "scan_files_sequentially() works", context do
+    expected = [
+      "Gulliver Jöllo;cdg.wtg@ultimate.ly;+469659560575;Mon, 8 June 2017 12:54:32 +0000",
+      "Éso Pita;cde.fgh@exact.ly;+56964956548;Mon, 4 May 2015 22:40:57 +0000"]
+    actual = Amt.scan_files_sequentially(context[:tpath])
     assert actual == expected
   end
 
