@@ -9,7 +9,7 @@ defmodule AmtTest do
       You have received an application for bitcoin guru from jaNE dOe
       View all applicants: https://www.example.com/e/v2?e=3D4vz24.agdvcw-c&amp=
       """
-    assert Amt.aname(ts) == {"bitcoin guru", "Jane Doe"}
+    assert Amt.get_name(ts) == {"bitcoin guru", "Jane Doe"}
   end
 
 
@@ -19,7 +19,7 @@ defmodule AmtTest do
       You have received an application for chief troublemaker from chArlY dE gauLLe
       View all applicants: https://www.example.com/e/v2?e=3D4vz24.agdvcw-c&amp=
       """
-    assert Amt.aname(ts) == {"chief troublemaker", "Charly De Gaulle"}
+    assert Amt.get_name(ts) == {"chief troublemaker", "Charly De Gaulle"}
   end
 
 
@@ -30,7 +30,7 @@ defmodule AmtTest do
       llo
       View all applicants: https://www.example.com/e/v2?e=3D4vz24.aageqh-1t&am=
       """
-    assert Amt.aname(ts) == {"pointy-haired guy", "Gulliver Jöllo"}
+    assert Amt.get_name(ts) == {"pointy-haired guy", "Gulliver Jöllo"}
   end
 
 
@@ -41,7 +41,7 @@ defmodule AmtTest do
       ta
       View all applicants: https://www.example.com/e/v2?e=3D4vz24.b044qe-3o&am
       """
-    assert Amt.aname(ts) == {"marketroid", "Éso Pita"}
+    assert Amt.get_name(ts) == {"marketroid", "Éso Pita"}
   end
 
 
@@ -52,7 +52,7 @@ defmodule AmtTest do
       le MBA, MSc, BA Open
       View all applicants: https://www.example.com/e/v2?e=3D4vz24.a9v2r7-1f&am=
       """
-    assert Amt.aname(ts) == {"day dreamer", "Xavo Rappasole Mba, Msc, Ba Open"}
+    assert Amt.get_name(ts) == {"day dreamer", "Xavo Rappasole Mba, Msc, Ba Open"}
   end
 
 
@@ -63,7 +63,7 @@ defmodule AmtTest do
       ek
       View all applicants: https://www.example.com/e/v2?e=3D4vz24.a9v2r7-1f&am=
       """
-    assert Amt.aname(ts) == {"keyboard trasher", "Gagga Randpek"}
+    assert Amt.get_name(ts) == {"keyboard trasher", "Gagga Randpek"}
   end
 
 
@@ -94,7 +94,7 @@ defmodule AmtTest do
     ts1 = """
       Contact InformationEmail: abx.fgh@exact.ly
       """
-    assert Amt.aemail(ts1) == "abx.fgh@exact.ly"
+    assert Amt.get_email(ts1) == "abx.fgh@exact.ly"
   end
 
 
@@ -102,7 +102,7 @@ defmodule AmtTest do
     ts1 = """
       Phone: +56964956548
       """
-    assert Amt.aphone(ts1) == "+56964956548"
+    assert Amt.get_phone(ts1) == "+56964956548"
   end
 
 
@@ -110,7 +110,7 @@ defmodule AmtTest do
     ts1 = """
       No phone number supplied :(
       """
-    assert Amt.aphone(ts1) == "N/A"
+    assert Amt.get_phone(ts1) == "N/A"
   end
 
 
@@ -120,9 +120,8 @@ defmodule AmtTest do
       Date: Mon, 4 May 2015 22:40:57 +0000 (UTC)
       X-LinkedIn-Class: EMAIL-DEFAULT
       """
-    assert Amt.adate(ts1) == "Mon, 4 May 2015 22:40:57 +0000"
+    assert Amt.get_date(ts1) == "Mon, 4 May 2015 22:40:57 +0000"
   end
-
 end
 
 
@@ -157,9 +156,9 @@ defmodule AmtFilesTest do
     Contact InformationEmail: cde.fgh@exact.ly
     Phone: +56964956548
     """
-  test "do_scan_file() works", context do
+  test "scan_file() works", context do
     expected = "Éso Pita;cde.fgh@exact.ly;+56964956548;Mon, 4 May 2015 22:40:57 +0000"
-    actual = Amt.do_scan_file(context[:fpath])
+    actual = Amt.scan_file(context[:fpath])
     assert actual == expected
   end
 
@@ -175,9 +174,9 @@ defmodule AmtFilesTest do
     Contact InformationEmail: cdg.wtg@ultimate.ly
     Phone: +469659560575
     """
-  test "do_scan_file() prepends the name of the open position", context do
+  test "scan_file() prepends the name of the open position", context do
     expected = "millionaire;Gulliver Jöllo;cdg.wtg@ultimate.ly;+469659560575;Mon, 8 June 2017 12:54:32 +0000"
-    actual = Amt.do_scan_file(context[:fpath], true)
+    actual = Amt.scan_file(context[:fpath], true)
     assert actual == expected
   end
 

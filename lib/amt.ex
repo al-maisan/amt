@@ -8,33 +8,26 @@ defmodule Amt do
     { parse, _, _ } = OptionParser.parse(
       argv, strict: [help: :boolean, seq: :boolean, show_pos: :boolean, path: :string])
 
-    if parse[:help] == true do
-      print_help()
-    end
     if parse[:path] != nil do
-      data = if parse[:seq] do
+      if parse[:seq] do
         scan_files_sequentially(parse[:path], parse[:show_pos])
       else
         scan_files(parse[:path], parse[:show_pos])
-      end
-      data |> Enum.each(fn(x) -> IO.puts(x) end)
+      end |> Enum.each(fn(x) -> IO.puts(x) end)
     else
       print_help()
     end
   end
 
-  def print_help() do
-    help_text = """
-      This tool scans a collection of application emails sent by
-      LinkedIn and extracts the applicants' name, email, phone and
-      date of application.
 
-        --help      print this help
-        --path P    look for *.eml file to scan in this drectory
-        --seq       scan files sequentially in the same process
-        --show-pos  show the position the person applied for as well
-      """
-    IO.puts help_text
+  @doc """
+  Extract the data from the applicants' emails, sort the CSV records
+  and print them to stdout. Email are scanned sequentially by the same
+  process.
+  """
+  def scan_files_sequentially(path, show_pos \\ false) do
+    Path.wildcard(path <> "/*.eml")
+    |> Enum.map(fn x -> scan_file(x, show_pos) end) |> Enum.sort
   end
 
 
@@ -48,7 +41,7 @@ defmodule Amt do
     Path.wildcard(path <> "/*.eml")
     |>  Enum.map(fn(fpath) ->
           spawn_link fn ->
-            send me, {self, do_scan_file(fpath, show_pos)}
+            send me, {self, scan_file(fpath, show_pos)}
           end
         end)
     |>  Enum.map(fn(_) ->
@@ -59,26 +52,15 @@ defmodule Amt do
 
 
   @doc """
-  Extract the data from the applicants' emails, sort the CSV records
-  and print them to stdout. Email are scanned sequentially by the same
-  process.
-  """
-  def scan_files_sequentially(path, show_pos \\ false) do
-    Path.wildcard(path <> "/*.eml")
-    |> Enum.map(fn x -> do_scan_file(x, show_pos) end) |> Enum.sort
-  end
-
-
-  @doc """
   Extract the data from the applicants' emails and return a CSV record
   (where the fields are delimited by a ';').
   """
-  def do_scan_file(path, show_pos \\ false) do
+  def scan_file(path, show_pos \\ false) do
     {:ok, body} = File.read(path)
-    {pos, name} = aname(body)
-    email = aemail(body)
-    phone = aphone(body)
-    date = adate(body)
+    {pos, name} = get_name(body)
+    email = get_email(body)
+    phone = get_phone(body)
+    date = get_date(body)
     if show_pos do
       Enum.join([pos, name, email, phone, date], ";")
     else
@@ -90,7 +72,7 @@ defmodule Amt do
   @doc """
   Extract the applicant's email address from the LinkedIn email.
   """
-  def aemail(txt) do
+  def get_email(txt) do
     { :ok, rx } = Regex.compile(~S"Contact InformationEmail:\s+(\S+)", "ums")
     Regex.run(rx, txt) |> List.last
   end
@@ -99,7 +81,7 @@ defmodule Amt do
   @doc """
   Extract the applicant's phone number from the LinkedIn email.
   """
-  def aphone(txt) do
+  def get_phone(txt) do
     {:ok, rx } = Regex.compile(~S"Phone:\s*(\+?[\d\s]+\d)", "ums")
     case Regex.run(rx, txt) do
       [_, phone] -> phone
@@ -111,7 +93,7 @@ defmodule Amt do
   @doc """
   Extract the applicant's date of application from the LinkedIn email.
   """
-  def adate(txt) do
+  def get_date(txt) do
     {:ok, rx } = Regex.compile(~S"^Date:\s+(.+)\s+\(.+$", "um")
     Regex.run(rx, txt) |> List.last
   end
@@ -121,7 +103,7 @@ defmodule Amt do
   Extract the name of the open position and the applicant's name from the
   LinkedIn email.
   """
-  def aname(txt) do
+  def get_name(txt) do
     txt = clean_utfs(txt)
     { :ok, rx } = Regex.compile(~S"You have received an application for (.+) from (.+)\s+View", "ums")
     [_, pos, name] = Regex.run(rx, txt)
@@ -151,5 +133,20 @@ defmodule Amt do
       |> :erlang.list_to_binary
     txt = String.replace(txt, utf, rune)
     do_clean_utfs(tail, txt)
+  end
+
+
+  defp print_help() do
+    help_text = """
+      This tool scans a collection of application emails sent by
+      LinkedIn and extracts the applicants' name, email, phone and
+      date of application.
+
+        --help      print this help
+        --path P    look for *.eml file to scan in this drectory
+        --seq       scan files sequentially in the same process
+        --show-pos  show the position the person applied for as well
+      """
+    IO.puts help_text
   end
 end
