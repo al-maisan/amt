@@ -139,7 +139,73 @@ defmodule AmtTest do
       """
     assert Amt.get_attachment(ts1) == ["Consultant_IT.SECURITY_CISSP_ENG_v2.pdf"]
   end
+
+
+  test "test attachment name scanning 3" do
+    ts1 = """
+      """
+    assert Amt.get_attachment(ts1) == []
+  end
+
+
+  test "test attachment name scanning 4" do
+    ts1 = """
+      --------------040006040109000903050706
+      Content-Type: text/plain; charset=UTF-8;
+       name="a1.txt"
+      Content-Transfer-Encoding: base64
+      Content-Disposition: attachment;
+       filename="a1.txt"
+
+      YTFiMgo=
+      --------------040006040109000903050706
+      Content-Type: text/plain; charset=UTF-8;
+       name="a2 blanks.txt"
+      Content-Transfer-Encoding: base64
+      Content-Disposition: attachment;
+       filename="a2 blanks.txt"
+
+      YzNkNAo=
+      --------------040006040109000903050706
+      Content-Type: text/csv;
+       name="a3.csv"
+      Content-Transfer-Encoding: quoted-printable
+      Content-Disposition: attachment;
+       filename="a3.csv"
+
+      e5;f6
+
+      --------------040006040109000903050706--
+
+      --nt3ssTlh6hRvNxeHVMQHqWXk384t73XSd
+      Content-Type: application/pgp-signature; name="signature.asc"
+      Content-Description: OpenPGP digital signature
+      Content-Disposition: attachment; filename="signature.asc"
+
+      -----BEGIN PGP SIGNATURE-----
+      Version: GnuPG v1
+
+      iQIcBAEBCAAGBQJVWXEAAAoJEGGHXhlmLdW2LAYP/2Nj3dkg1LpIITPfLQT3XzI3
+      dVwQGWeDAKoeSMZ+CrL27qiGKgDooEBrIVTWi6Q8Hp/YarmkAErBHEz6dtmaq6/U
+      HD7+uMjV2YLyaHG24TqFP3vxFcWJqB9tDDL4P/jlnTgJ1NYqdZomEvtLtrwDq54P
+      M70GLXf6nAuU5fyFO37Zau98/9xbN1qKGi84EhoQVHUB64U+NrjH96SSYKAF12AM
+      T5/Lbr94UnTpss1E1ril3KRJwAAfI0oZk6vrxADh/t4XxXNApeBCgLYue9BKDv6V
+      fDKdhxgmOTAjR96l+Ebs4P1IttpGESLyKdau+l7x1qzxq6bFhpczv4LTfytlLBa2
+      vC4HHm9MKIbQBNTbTURLSn5stKd18EDHskouzaPTP4yopSl8m4Ai91ahC5jh4QbZ
+      DYtS/dyNmQpOsewagVwfq1Ce8h4fLTApEP20ahVqt2JU/6qRaQLuissD7wV4bGDU
+      /NigmzV15jBiUEoHhBd/i77kzUZJcPrxgwRHwTUwXs8E6Rq69PpMPviM2/v/ON3P
+      L9H+zLrgm5Phf1bCROzu64y+ge7VwFJK5HoddsiTjUOCIijR5Qs+UTuAyFIw3Npq
+      zcywNqaoniNfMjKj4ENxV+3XSY7DmSHoEY9uThfLsqubFb04o1WTzbgPDOzlHZyI
+      rxlWtuE7OPTHAyPqqDcS
+      =4jiJ
+      -----END PGP SIGNATURE-----
+
+      --nt3ssTlh6hRvNxeHVMQHqWXk384t73XSd--
+      """
+    assert Amt.get_attachment(ts1) == ["a1.txt", "a2 blanks.txt", "a3.csv", "signature.asc"]
+  end
 end
+
 
 # -------------------------------------------------------------
 

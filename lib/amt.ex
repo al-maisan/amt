@@ -122,8 +122,13 @@ defmodule Amt do
   """
   def get_attachment(txt) do
     { :ok, rx } = Regex.compile(~S'attachment;\s+filename="?([^\r\n"]+)"?', "ums")
-    [_|matches] = Regex.run(rx, txt)
-    matches
+    case Regex.scan(rx, txt) do
+      [[_|matches]] -> matches
+      [] -> []
+      matches ->
+        matches = matches |> Enum.map(fn([_|match]) -> match end)
+        List.flatten(matches)
+    end
   end
 
 
