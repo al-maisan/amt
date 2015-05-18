@@ -124,11 +124,34 @@ defmodule AmtTest do
   end
 
 
+  test "attachment data 1" do
+    ts1 = """
+      MIME-parts in this message:
+        2 <none> text/plain [<none>] (2.3 kB)
+        3 <none> text/html [<none>] (58.3 kB)
+        4 resume_11.docx application/vnd.openxmlformats-officedocument.wordprocessingml.document [attach] (97.7 kB)
+      """
+    assert Amt.get_attachment_data(ts1) == [["4", "resume_11.docx"]]
+  end
+
+
+  test "attachment data 2" do
+    ts1 = """
+      MIME-parts in this message:
+        1 <none> text/plain [<none>] (0.3 kB)
+        2 a1.txt text/plain [attach] (0.0 kB)
+        3 a2-blanks.txt text/plain [attach] (0.0 kB)
+        4 a3.csv text/csv [attach] (0.0 kB)
+      """
+    assert Amt.get_attachment_data(ts1) == [["2", "a1.txt"], ["3", "a2-blanks.txt"], ["4", "a3.csv"]]
+  end
+
+
   test "test attachment name scanning 1" do
     ts1 = """
       Content-Disposition: attachment; filename="ahdh.foe.CVEN 2.pdf"
       """
-    assert Amt.get_attachment(ts1) == ["ahdh.foe.CVEN 2.pdf"]
+    assert Amt.get_attachments(ts1) == ["ahdh.foe.CVEN 2.pdf"]
   end
 
 
@@ -137,14 +160,14 @@ defmodule AmtTest do
       Content-Disposition: attachment; 
           filename=Consultant_IT.SECURITY_CISSP_ENG_v2.pdf
       """
-    assert Amt.get_attachment(ts1) == ["Consultant_IT.SECURITY_CISSP_ENG_v2.pdf"]
+    assert Amt.get_attachments(ts1) == ["Consultant_IT.SECURITY_CISSP_ENG_v2.pdf"]
   end
 
 
   test "test attachment name scanning 3" do
     ts1 = """
       """
-    assert Amt.get_attachment(ts1) == []
+    assert Amt.get_attachments(ts1) == []
   end
 
 
@@ -202,7 +225,7 @@ defmodule AmtTest do
 
       --nt3ssTlh6hRvNxeHVMQHqWXk384t73XSd--
       """
-    assert Amt.get_attachment(ts1) == ["a1.txt", "a2 blanks.txt", "a3.csv", "signature.asc"]
+    assert Amt.get_attachments(ts1) == ["a1.txt", "a2 blanks.txt", "a3.csv", "signature.asc"]
   end
 end
 
@@ -239,7 +262,7 @@ defmodule AmtFilesTest do
     Phone: +56964956548
     """
   test "scan_file() works", context do
-    expected = "Éso Pita;cde.fgh@exact.ly;+56964956548;Mon, 4 May 2015 22:40:57 +0000"
+    expected = {"Éso Pita;cde.fgh@exact.ly;+56964956548;Mon, 4 May 2015 22:40:57 +0000", {"Éso Pita", []}}
     actual = Amt.scan_file(context[:fpath])
     assert actual == expected
   end
@@ -257,7 +280,7 @@ defmodule AmtFilesTest do
     Phone: +469659560575
     """
   test "scan_file() prepends the name of the open position", context do
-    expected = "millionaire;Gulliver Jöllo;cdg.wtg@ultimate.ly;+469659560575;Mon, 8 June 2017 12:54:32 +0000"
+    expected = {"millionaire;Gulliver Jöllo;cdg.wtg@ultimate.ly;+469659560575;Mon, 8 June 2017 12:54:32 +0000", {"Gulliver Jöllo", []}}
     actual = Amt.scan_file(context[:fpath], true)
     assert actual == expected
   end
@@ -279,15 +302,52 @@ defmodule AmtMultiFilesTest do
 
 
   @test_files_content ["""
-    To: xyz <xyz@example.com>
     Date: Mon, 4 May 2015 22:40:57 +0000 (UTC)
-    X-LinkedIn-Class: EMAIL-DEFAULT
+    From: Glfheo Kefhf <fheh@fphfdd.cc>
+    MIME-Version: 1.0
+    To: Hofho Od <hdo@ddhp.cc>
+    Subject: attachments
+    Content-Type: multipart/mixed;
+     boundary="------------040206090805020401010202"
+
+    This is a multi-part message in MIME format.
+    --------------040206090805020401010202
+    Content-Type: text/plain; charset=utf-8
+    Content-Transfer-Encoding: 8bit
+
     Hi Joe,
     You have received an application for saure-Gurken-Einmacher from =C3=89so Pi=
     ta
     View all applicants: https://www.example.com/e/v2?e=3D4vz24.b044qe-3o&am
     Contact InformationEmail: cde.fgh@exact.ly
     Phone: +56964956548
+
+    --------------040206090805020401010202
+    Content-Type: text/plain; charset=UTF-8;
+     name="a1.txt"
+    Content-Transfer-Encoding: base64
+    Content-Disposition: attachment;
+     filename="a1.txt"
+
+    YTFiMgo=
+    --------------040206090805020401010202
+    Content-Type: text/plain; charset=UTF-8;
+     name="a2 blanks.txt"
+    Content-Transfer-Encoding: base64
+    Content-Disposition: attachment;
+     filename="a2 blanks.txt"
+
+    YzNkNAo=
+    --------------040206090805020401010202
+    Content-Type: text/csv;
+     name="a3.csv"
+    Content-Transfer-Encoding: 7bit
+    Content-Disposition: attachment;
+     filename="a3.csv"
+
+    e5;f6
+
+    --------------040206090805020401010202--
     """, """
     To: xbt <xbt@example.com>
     Date: Mon, 8 June 2017 12:54:32 +0000 (UTC)
@@ -321,9 +381,11 @@ defmodule AmtMultiFilesTest do
   @tag test_data: @test_files_content
   test "scan_files() works", context do
     expected = [
-      "millionaire;Gulliver Jöllo;cdg.wtg@ultimate.ly;+469659560575;Mon, 8 June 2017 12:54:32 +0000",
-      "saure-Gurken-Einmacher;Éso Pita;cde.fgh@exact.ly;+56964956548;Mon, 4 May 2015 22:40:57 +0000"]
-    actual = Amt.scan_files(context[:tpath], true)
+      {"millionaire;Gulliver Jöllo;cdg.wtg@ultimate.ly;+469659560575;Mon, 8 June 2017 12:54:32 +0000",
+      {"Gulliver Jöllo", []}},
+      {"saure-Gurken-Einmacher;Éso Pita;cde.fgh@exact.ly;+56964956548;Mon, 4 May 2015 22:40:57 +0000",
+      {"Éso Pita", [["2", "a1.txt"], ["3", "a2-blanks.txt"], ["4", "a3.csv"]]}}]
+    actual = Amt.scan_files(context[:tpath], "/tmp", true)
     assert actual == expected
   end
 
@@ -331,9 +393,9 @@ defmodule AmtMultiFilesTest do
   @tag test_data: @test_files_content
   test "scan_files_sequentially() works", context do
     expected = [
-      "Gulliver Jöllo;cdg.wtg@ultimate.ly;+469659560575;Mon, 8 June 2017 12:54:32 +0000",
-      "Éso Pita;cde.fgh@exact.ly;+56964956548;Mon, 4 May 2015 22:40:57 +0000"]
-    actual = Amt.scan_files_sequentially(context[:tpath])
+      {"Gulliver Jöllo;cdg.wtg@ultimate.ly;+469659560575;Mon, 8 June 2017 12:54:32 +0000", {"Gulliver Jöllo", []}},
+      {"Éso Pita;cde.fgh@exact.ly;+56964956548;Mon, 4 May 2015 22:40:57 +0000", {"Éso Pita", [["2", "a1.txt"], ["3", "a2-blanks.txt"], ["4", "a3.csv"]]}}]
+    actual = Amt.scan_files_sequentially(context[:tpath], "/tmp")
     assert actual == expected
   end
 

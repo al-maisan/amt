@@ -6,17 +6,41 @@ defmodule Amt do
 
   def main(argv) do
     { parse, _, _ } = OptionParser.parse(
-      argv, strict: [help: :boolean, seq: :boolean, show_pos: :boolean, path: :string])
+      argv, strict: [help: :boolean, seq: :boolean, show_pos: :boolean,
+                     path: :string, attachments: :string])
 
     if parse[:path] != nil do
-      if parse[:seq] do
-        scan_files_sequentially(parse[:path], parse[:show_pos])
+      if File.exists?(parse[:attachments]) do
+        IO.puts "Attachments directory '#{parse[:attachments]}' already exists!"
+        System.halt(101)
       else
-        scan_files(parse[:path], parse[:show_pos])
+        File.mkdir_p!(parse[:attachments])
+      end
+      if parse[:seq] do
+        scan_files_sequentially(parse[:path], parse[:attachments], parse[:show_pos])
+      else
+        scan_files(parse[:path], parse[:attachments], parse[:show_pos])
       end |> Enum.each(fn(x) -> IO.puts(x) end)
     else
       print_help()
     end
+  end
+
+
+  defp print_help() do
+    help_text = """
+      This tool scans a collection of application emails sent by
+      LinkedIn and extracts the applicants' name, email, phone and
+      date of application.
+
+        --attachments P  store attachments in directory P, the tool aborts
+                         if P exists already (exit code 101)
+        --help           print this help
+        --path P         look for *.eml file to scan in directory P
+        --seq            scan files sequentially in the same process
+        --show-pos       show the position the person applied for as well
+      """
+    IO.puts help_text
   end
 
 
@@ -25,7 +49,7 @@ defmodule Amt do
   and print them to stdout. Emails are scanned sequentially by the same
   process.
   """
-  def scan_files_sequentially(path, show_pos \\ false) do
+  def scan_files_sequentially(path, _attachments, show_pos \\ false) do
     Path.wildcard(path <> "/*.eml")
     |> Enum.map(fn x -> scan_file(x, show_pos) end) |> Enum.sort
   end
@@ -41,11 +65,22 @@ defmodule Amt do
     email = get_email(body)
     phone = get_phone(body)
     date = get_date(body)
+    {mudata, 0} = System.cmd("mu", ["extract", path])
+    mudata = get_attachment_data(mudata)
     if show_pos do
-      Enum.join([pos, name, email, phone, date], ";")
+      {Enum.join([pos, name, email, phone, date], ";"), {name, mudata}}
     else
-      Enum.join([name, email, phone, date], ";")
+      {Enum.join([name, email, phone, date], ";"), {name, mudata}}
     end
+  end
+
+
+  def get_attachment_data(mudata) do
+    mudata
+    |> String.split(~R/\n/)
+    |> Enum.filter(fn x -> Regex.match?(~R/attach/, x) end)
+    |> Enum.map(&String.split/1)
+    |> Enum.map(fn x -> Enum.take(x, 2) end)
   end
 
 
@@ -120,7 +155,7 @@ defmodule Amt do
   Attempt to find the names of attachments buried in the email.
   Returns nil or a list of strings (the attachment file names).
   """
-  def get_attachment(txt) do
+  def get_attachments(txt) do
     { :ok, rx } = Regex.compile(~S'attachment;\s+filename="?([^\r\n"]+)"?', "ums")
     case Regex.scan(rx, txt) do
       [[_|matches]] -> matches
@@ -137,7 +172,7 @@ defmodule Amt do
   and print them to stdout. Every email is scanned inside a dedicated
   erlang process.
   """
-  def scan_files(path, show_pos \\ false) do
+  def scan_files(path, _attachments, show_pos \\ false) do
     me = self
     Path.wildcard(path <> "/*.eml")
     |>  Enum.map(fn(fpath) ->
@@ -149,20 +184,5 @@ defmodule Amt do
           receive do {_, result} -> result end
         end)
     |> Enum.sort
-  end
-
-
-  defp print_help() do
-    help_text = """
-      This tool scans a collection of application emails sent by
-      LinkedIn and extracts the applicants' name, email, phone and
-      date of application.
-
-        --help      print this help
-        --path P    look for *.eml file to scan in this drectory
-        --seq       scan files sequentially in the same process
-        --show-pos  show the position the person applied for as well
-      """
-    IO.puts help_text
   end
 end
