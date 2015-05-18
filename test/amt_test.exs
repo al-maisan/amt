@@ -122,8 +122,24 @@ defmodule AmtTest do
       """
     assert Amt.get_date(ts1) == "Mon, 4 May 2015 22:40:57 +0000"
   end
-end
 
+
+  test "test attachment name scanning 1" do
+    ts1 = """
+      Content-Disposition: attachment; filename="ahdh.foe.CVEN 2.pdf"
+      """
+    assert Amt.get_attachment(ts1) == ["ahdh.foe.CVEN 2.pdf"]
+  end
+
+
+  test "test attachment name scanning 2" do
+    ts1 = """
+      Content-Disposition: attachment; 
+          filename=Consultant_IT.SECURITY_CISSP_ENG_v2.pdf
+      """
+    assert Amt.get_attachment(ts1) == ["Consultant_IT.SECURITY_CISSP_ENG_v2.pdf"]
+  end
+end
 
 # -------------------------------------------------------------
 

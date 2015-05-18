@@ -117,6 +117,17 @@ defmodule Amt do
 
 
   @doc """
+  Attempt to find the names of attachments buried in the email.
+  Returns nil or a list of strings (the attachment file names).
+  """
+  def get_attachment(txt) do
+    { :ok, rx } = Regex.compile(~S'attachment;\s+filename="?([^\r\n"]+)"?', "ums")
+    [_|matches] = Regex.run(rx, txt)
+    matches
+  end
+
+
+  @doc """
   Extract the data from the applicants' emails, sort the CSV records
   and print them to stdout. Every email is scanned inside a dedicated
   erlang process.

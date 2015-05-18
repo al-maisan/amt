@@ -20,7 +20,7 @@ defmodule Amt.Mixfile do
   #
   # Type `mix help compile.app` for more information
   def application do
-    [applications: [:logger]]
+    [applications: [:logger, :postgrex, :ecto]]
   end
 
   # Dependencies can be Hex packages:
@@ -34,6 +34,8 @@ defmodule Amt.Mixfile do
   # Type `mix help deps` for more examples and options
   defp deps do
     [{:earmark, "~> 0.1", only: :dev},
-     {:ex_doc, "~> 0.7", only: :dev}]
+     {:ex_doc, "~> 0.7", only: :dev},
+     {:postgrex, ">= 0.0.0"},
+     {:ecto, "~> 0.9.0"}]
   end
 end

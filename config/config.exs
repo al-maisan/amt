@@ -24,3 +24,10 @@ use Mix.Config
 # here (which is why it is important to import them last).
 #
 #     import_config "#{Mix.env}.exs"
+
+config :amt_repo, Amt.Repo,
+  adapter: Ecto.Adapters.Postgres,
+  database: "amtdb",
+  username: "amt",
+  password: "hoc.OdIawyucVec2",
+  hostname: "localhost"
