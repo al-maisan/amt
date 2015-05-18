@@ -195,6 +195,12 @@ defmodule Amt do
   end
 
 
+  @doc """
+  Extract the attachments for a single saved email. These are extracted
+  to a temporary directory and then moved to the target attachments directory
+  subesequently.
+  When moving the files these are all (re)named after the applicant.
+  """
   def extract_attachments(email_path, atmts_dir, {name, atmt_data}) do
     if length(atmt_data) > 0 do
       {temp_dir, 0} = System.cmd("mktemp", ["-d"])
@@ -208,6 +214,11 @@ defmodule Amt do
     end
   end
 
+
+  @doc """
+  Move the attachments for a single applicant to the attachment target
+  directory and rename them after the applicant.
+  """
   def move_attachments(temp_dir, atmts_dir, name) do
     prefix = Regex.replace(~R/\s+/, name, "-", [:global])
     prefix = atmts_dir <> "/" <> prefix
@@ -215,6 +226,12 @@ defmodule Amt do
     do_move_attachments(files, 0, prefix)
   end
 
+
+  @doc """
+  Tail recursive function that does the actual moving/renaming of the
+  attachments. In case of multiple attachments per user, the file names
+  will have a number appended to them.
+  """
   def do_move_attachments([], counter, _), do: counter
   def do_move_attachments([file|files], counter, prefix) do
     ext = Path.extname(file)
