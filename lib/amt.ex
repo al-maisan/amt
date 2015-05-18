@@ -10,11 +10,13 @@ defmodule Amt do
                      path: :string, attachments: :string])
 
     if parse[:path] != nil do
-      if File.exists?(parse[:attachments]) do
-        IO.puts "Attachments directory '#{parse[:attachments]}' already exists!"
-        System.halt(101)
-      else
-        File.mkdir_p!(parse[:attachments])
+      if parse[:attachments] != nil do
+        if File.exists?(parse[:attachments]) do
+          IO.puts "Attachments directory '#{parse[:attachments]}' already exists!"
+          System.halt(101)
+        else
+          File.mkdir_p!(parse[:attachments])
+        end
       end
       if parse[:seq] do
         scan_files_sequentially(parse[:path], parse[:attachments], parse[:show_pos])
@@ -53,7 +55,9 @@ defmodule Amt do
     Path.wildcard(path <> "/*.eml")
     |> Enum.map(fn x ->
       {result, adata} = scan_file(x, show_pos)
-      extract_attachments(x, atmts_dir, adata)
+      if atmts_dir != nil do
+        extract_attachments(x, atmts_dir, adata)
+      end
       result
     end)
     |> Enum.sort
@@ -68,7 +72,7 @@ defmodule Amt do
     {:ok, body} = File.read(path)
     {pos, name} = get_name(body)
     email = get_email(body)
-    phone = get_phone(body)
+    phone = "'" <> get_phone(body)
     date = get_date(body)
     {mudata, 0} = System.cmd("mu", ["extract", path])
     mudata = get_attachment_data(mudata)
@@ -188,7 +192,9 @@ defmodule Amt do
         end)
     |>  Enum.map(fn(_) ->
           receive do {fpath, {result, adata}} ->
-            extract_attachments(fpath, atmts_dir, adata)
+            if atmts_dir != nil do
+              extract_attachments(fpath, atmts_dir, adata)
+            end
             result
           end
         end)
