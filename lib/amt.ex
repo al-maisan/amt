@@ -49,7 +49,7 @@ defmodule Amt do
   and print them to stdout. Emails are scanned sequentially by the same
   process.
   """
-  def scan_files_sequentially(path, _attachments, show_pos \\ false) do
+  def scan_files_sequentially(path, atmts_dir, show_pos \\ false) do
     Path.wildcard(path <> "/*.eml")
     |> Enum.map(fn x -> scan_file(x, show_pos) end) |> Enum.sort
   end
@@ -172,17 +172,56 @@ defmodule Amt do
   and print them to stdout. Every email is scanned inside a dedicated
   erlang process.
   """
-  def scan_files(path, _attachments, show_pos \\ false) do
+  def scan_files(emails_dir, atmts_dir, show_pos \\ false) do
     me = self
-    Path.wildcard(path <> "/*.eml")
+    Path.wildcard(emails_dir <> "/*.eml")
     |>  Enum.map(fn(fpath) ->
           spawn_link fn ->
-            send me, {self, scan_file(fpath, show_pos)}
+            send me, {fpath, scan_file(fpath, show_pos)}
           end
         end)
     |>  Enum.map(fn(_) ->
-          receive do {_, result} -> result end
+          receive do {fpath, {result, adata}} ->
+            extract_attachments(fpath, atmts_dir, adata)
+            result
+          end
         end)
     |> Enum.sort
   end
+
+
+  def extract_attachments(email_path, atmts_dir, {name, atmt_data}) do
+    if length(atmt_data) > 0 do
+      {temp_dir, 0} = System.cmd("mktemp", ["-d"])
+      temp_dir = String.rstrip(temp_dir)
+      atmt_indices = atmt_data |> Enum.map(fn [i, _] -> i end)
+      atmt_indices = Enum.join(atmt_indices, ",")
+      mu_args = ["extract", "-a", "--target-dir=#{temp_dir}", email_path]
+      IO.inspect mu_args
+      {_, 0} = System.cmd("mu", ["extract", "-a", "--target-dir=#{temp_dir}", email_path])
+      move_attachments(temp_dir, atmts_dir, name)
+      System.cmd("rm", ["-rf", temp_dir])
+    end
+  end
+
+  def move_attachments(temp_dir, atmts_dir, name) do
+    prefix = Regex.replace(~R/\s+/, name, "-", [:global])
+    prefix = atmts_dir <> "/" <> prefix
+    files = File.ls!(temp_dir) |> Enum.map(fn f -> temp_dir <> "/" <> f end)
+    IO.inspect "files = #{files}"
+    do_move_attachments(files, 0, prefix)
+  end
+
+  def do_move_attachments([], counter, _), do: counter
+  def do_move_attachments([file|files], counter, prefix) do
+    ext = Path.extname(file)
+    target_path = if counter > 0 do
+      prefix <> "-" <> to_string(counter) <> ext
+    else
+      prefix <> ext
+    end
+    {_, 0} = System.cmd("mv", [file, target_path])
+    do_move_attachments(files, (counter + 1), prefix)
+  end
+
 end

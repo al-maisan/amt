@@ -300,7 +300,6 @@ end
 defmodule AmtMultiFilesTest do
   use ExUnit.Case
 
-
   @test_files_content ["""
     Date: Mon, 4 May 2015 22:40:57 +0000 (UTC)
     From: Glfheo Kefhf <fheh@fphfdd.cc>
@@ -364,6 +363,8 @@ defmodule AmtMultiFilesTest do
   setup context do
     {tpath, 0} = System.cmd("mktemp", ["-d"])
     tpath = String.rstrip(tpath)
+    {atmts_dir, 0} = System.cmd("mktemp", ["-d"])
+    atmts_dir = String.rstrip(atmts_dir)
     context[:test_data] |> Enum.map(fn x ->
       {fpath, 0} = System.cmd("mktemp", ["-p", tpath, "amt.XXXXX.eml"])
       fpath = String.rstrip(fpath)
@@ -372,9 +373,11 @@ defmodule AmtMultiFilesTest do
 
     on_exit fn ->
       System.cmd("rm", ["-rf", tpath])
+      IO.inspect "atmts_dir = #{atmts_dir}"
+      #System.cmd("rm", ["-rf", atmts_dir])
     end
 
-    {:ok, tpath: tpath}
+    {:ok, tpath: tpath, atmts_dir: atmts_dir}
   end
 
 
@@ -385,7 +388,7 @@ defmodule AmtMultiFilesTest do
       {"Gulliver Jöllo", []}},
       {"saure-Gurken-Einmacher;Éso Pita;cde.fgh@exact.ly;+56964956548;Mon, 4 May 2015 22:40:57 +0000",
       {"Éso Pita", [["2", "a1.txt"], ["3", "a2-blanks.txt"], ["4", "a3.csv"]]}}]
-    actual = Amt.scan_files(context[:tpath], "/tmp", true)
+    actual = Amt.scan_files(context[:tpath], context[:atmts_dir], true)
     assert actual == expected
   end
 
@@ -395,7 +398,7 @@ defmodule AmtMultiFilesTest do
     expected = [
       {"Gulliver Jöllo;cdg.wtg@ultimate.ly;+469659560575;Mon, 8 June 2017 12:54:32 +0000", {"Gulliver Jöllo", []}},
       {"Éso Pita;cde.fgh@exact.ly;+56964956548;Mon, 4 May 2015 22:40:57 +0000", {"Éso Pita", [["2", "a1.txt"], ["3", "a2-blanks.txt"], ["4", "a3.csv"]]}}]
-    actual = Amt.scan_files_sequentially(context[:tpath], "/tmp")
+    actual = Amt.scan_files_sequentially(context[:tpath], context[:atmts_dir])
     assert actual == expected
   end
 
