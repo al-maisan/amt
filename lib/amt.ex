@@ -127,7 +127,8 @@ defmodule Amt do
     txt = clean_utfs(txt)
     { :ok, rx } = Regex.compile(~S"You have received an application for (.+) from (.+)\s+View", "ums")
     [_, pos, name] = Regex.run(rx, txt)
-    name = String.split(name) |> Enum.map &String.capitalize/1
+    name = Enum.take(String.split(name) |> Enum.map(&String.capitalize/1), 3)
+    |> Enum.map(fn x -> Regex.replace(~R/[(),;:]/, x, "", [:global]) end)
     {pos, Enum.join(name, " ")}
   end
 

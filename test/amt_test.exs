@@ -52,7 +52,7 @@ defmodule AmtTest do
       le MBA, MSc, BA Open
       View all applicants: https://www.example.com/e/v2?e=3D4vz24.a9v2r7-1f&am=
       """
-    assert Amt.get_name(ts) == {"day dreamer", "Xavo Rappasole Mba, Msc, Ba Open"}
+    assert Amt.get_name(ts) == {"day dreamer", "Xavo Rappasole Mba"}
   end
 
 
