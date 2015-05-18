@@ -206,8 +206,6 @@ defmodule Amt do
       {temp_dir, 0} = System.cmd("mktemp", ["-d"])
       temp_dir = String.rstrip(temp_dir)
       atmt_indices = atmt_data |> Enum.map(fn [i, _] -> i end)
-      atmt_indices = Enum.join(atmt_indices, ",")
-      mu_args = ["extract", "-a", "--target-dir=#{temp_dir}", email_path]
       {_, 0} = System.cmd("mu", ["extract", "-a", "--target-dir=#{temp_dir}", email_path])
       move_attachments(temp_dir, atmts_dir, name)
       System.cmd("rm", ["-rf", temp_dir])
