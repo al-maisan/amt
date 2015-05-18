@@ -51,7 +51,12 @@ defmodule Amt do
   """
   def scan_files_sequentially(path, atmts_dir, show_pos \\ false) do
     Path.wildcard(path <> "/*.eml")
-    |> Enum.map(fn x -> scan_file(x, show_pos) end) |> Enum.sort
+    |> Enum.map(fn x ->
+      {result, adata} = scan_file(x, show_pos)
+      extract_attachments(x, atmts_dir, adata)
+      result
+    end)
+    |> Enum.sort
   end
 
 
@@ -197,7 +202,6 @@ defmodule Amt do
       atmt_indices = atmt_data |> Enum.map(fn [i, _] -> i end)
       atmt_indices = Enum.join(atmt_indices, ",")
       mu_args = ["extract", "-a", "--target-dir=#{temp_dir}", email_path]
-      IO.inspect mu_args
       {_, 0} = System.cmd("mu", ["extract", "-a", "--target-dir=#{temp_dir}", email_path])
       move_attachments(temp_dir, atmts_dir, name)
       System.cmd("rm", ["-rf", temp_dir])
@@ -208,7 +212,6 @@ defmodule Amt do
     prefix = Regex.replace(~R/\s+/, name, "-", [:global])
     prefix = atmts_dir <> "/" <> prefix
     files = File.ls!(temp_dir) |> Enum.map(fn f -> temp_dir <> "/" <> f end)
-    IO.inspect "files = #{files}"
     do_move_attachments(files, 0, prefix)
   end
 

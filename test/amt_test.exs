@@ -373,8 +373,7 @@ defmodule AmtMultiFilesTest do
 
     on_exit fn ->
       System.cmd("rm", ["-rf", tpath])
-      IO.inspect "atmts_dir = #{atmts_dir}"
-      #System.cmd("rm", ["-rf", atmts_dir])
+      System.cmd("rm", ["-rf", atmts_dir])
     end
 
     {:ok, tpath: tpath, atmts_dir: atmts_dir}
@@ -384,22 +383,38 @@ defmodule AmtMultiFilesTest do
   @tag test_data: @test_files_content
   test "scan_files() works", context do
     expected = [
-      {"millionaire;Gulliver Jöllo;cdg.wtg@ultimate.ly;+469659560575;Mon, 8 June 2017 12:54:32 +0000",
-      {"Gulliver Jöllo", []}},
-      {"saure-Gurken-Einmacher;Éso Pita;cde.fgh@exact.ly;+56964956548;Mon, 4 May 2015 22:40:57 +0000",
-      {"Éso Pita", [["2", "a1.txt"], ["3", "a2-blanks.txt"], ["4", "a3.csv"]]}}]
+      "millionaire;Gulliver Jöllo;cdg.wtg@ultimate.ly;+469659560575;Mon, 8 June 2017 12:54:32 +0000",
+      "saure-Gurken-Einmacher;Éso Pita;cde.fgh@exact.ly;+56964956548;Mon, 4 May 2015 22:40:57 +0000"]
     actual = Amt.scan_files(context[:tpath], context[:atmts_dir], true)
     assert actual == expected
+
+    expected_attachments = """
+      total 12K
+      4.0K Éso-Pita-1.csv
+      4.0K Éso-Pita-2.txt
+      4.0K Éso-Pita.txt
+      """
+    {actual, 0} = System.cmd("ls", ["-sh", context[:atmts_dir]])
+    assert actual == expected_attachments
   end
 
 
   @tag test_data: @test_files_content
   test "scan_files_sequentially() works", context do
     expected = [
-      {"Gulliver Jöllo;cdg.wtg@ultimate.ly;+469659560575;Mon, 8 June 2017 12:54:32 +0000", {"Gulliver Jöllo", []}},
-      {"Éso Pita;cde.fgh@exact.ly;+56964956548;Mon, 4 May 2015 22:40:57 +0000", {"Éso Pita", [["2", "a1.txt"], ["3", "a2-blanks.txt"], ["4", "a3.csv"]]}}]
+      "Gulliver Jöllo;cdg.wtg@ultimate.ly;+469659560575;Mon, 8 June 2017 12:54:32 +0000",
+      "Éso Pita;cde.fgh@exact.ly;+56964956548;Mon, 4 May 2015 22:40:57 +0000"]
     actual = Amt.scan_files_sequentially(context[:tpath], context[:atmts_dir])
     assert actual == expected
+
+    expected_attachments = """
+      total 12K
+      4.0K Éso-Pita-1.csv
+      4.0K Éso-Pita-2.txt
+      4.0K Éso-Pita.txt
+      """
+    {actual, 0} = System.cmd("ls", ["-sh", context[:atmts_dir]])
+    assert actual == expected_attachments
   end
 
 
