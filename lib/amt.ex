@@ -73,7 +73,7 @@ defmodule Amt do
     {pos, name} = get_name(body)
     email = get_email(body)
     phone = "'" <> get_phone(body)
-    date = get_date(body)
+    date = "'" <> get_date(body)
     {mudata, 0} = System.cmd("mu", ["extract", path])
     mudata = get_attachment_data(mudata)
     if show_pos do
@@ -119,7 +119,13 @@ defmodule Amt do
   """
   def get_date(txt) do
     {:ok, rx } = Regex.compile(~S"^Date:\s+(.+)\s+\(.+$", "um")
-    Regex.run(rx, txt) |> List.last
+    Regex.run(rx, txt) |> List.last |> massage_date_string
+  end
+
+  def massage_date_string(ds) do
+    [year, month, day] = Enum.reverse(Enum.take(Enum.drop(String.split(ds), 1), 3)) |> Enum.map(&String.capitalize/1)
+    day = :lists.flatten(:io_lib.format("~2.10.0B", [String.to_integer(day)]))
+    Enum.join([year, month, day], "-")
   end
 
 

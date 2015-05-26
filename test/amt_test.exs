@@ -120,7 +120,7 @@ defmodule AmtTest do
       Date: Mon, 4 May 2015 22:40:57 +0000 (UTC)
       X-LinkedIn-Class: EMAIL-DEFAULT
       """
-    assert Amt.get_date(ts1) == "Mon, 4 May 2015 22:40:57 +0000"
+    assert Amt.get_date(ts1) == "2015-May-04"
   end
 
 
@@ -262,7 +262,7 @@ defmodule AmtFilesTest do
     Phone: +56964956548
     """
   test "scan_file() works", context do
-    expected = {"Éso Pita;cde.fgh@exact.ly;+56964956548;Mon, 4 May 2015 22:40:57 +0000", {"Éso Pita", []}}
+    expected = {"Éso Pita;cde.fgh@exact.ly;'+56964956548;'2015-May-04", {"Éso Pita", []}}
     actual = Amt.scan_file(context[:fpath])
     assert actual == expected
   end
@@ -280,7 +280,7 @@ defmodule AmtFilesTest do
     Phone: +469659560575
     """
   test "scan_file() prepends the name of the open position", context do
-    expected = {"millionaire;Gulliver Jöllo;cdg.wtg@ultimate.ly;+469659560575;Mon, 8 June 2017 12:54:32 +0000", {"Gulliver Jöllo", []}}
+    expected = {"millionaire;Gulliver Jöllo;cdg.wtg@ultimate.ly;'+469659560575;'2017-June-08", {"Gulliver Jöllo", []}}
     actual = Amt.scan_file(context[:fpath], true)
     assert actual == expected
   end
@@ -383,8 +383,8 @@ defmodule AmtMultiFilesTest do
   @tag test_data: @test_files_content
   test "scan_files() works", context do
     expected = [
-      "millionaire;Gulliver Jöllo;cdg.wtg@ultimate.ly;+469659560575;Mon, 8 June 2017 12:54:32 +0000",
-      "saure-Gurken-Einmacher;Éso Pita;cde.fgh@exact.ly;+56964956548;Mon, 4 May 2015 22:40:57 +0000"]
+      "millionaire;Gulliver Jöllo;cdg.wtg@ultimate.ly;'+469659560575;'2017-June-08",
+      "saure-Gurken-Einmacher;Éso Pita;cde.fgh@exact.ly;'+56964956548;'2015-May-04"]
     actual = Amt.scan_files(context[:tpath], context[:atmts_dir], true)
     assert actual == expected
 
@@ -402,8 +402,8 @@ defmodule AmtMultiFilesTest do
   @tag test_data: @test_files_content
   test "scan_files_sequentially() works", context do
     expected = [
-      "Gulliver Jöllo;cdg.wtg@ultimate.ly;+469659560575;Mon, 8 June 2017 12:54:32 +0000",
-      "Éso Pita;cde.fgh@exact.ly;+56964956548;Mon, 4 May 2015 22:40:57 +0000"]
+      "Gulliver Jöllo;cdg.wtg@ultimate.ly;'+469659560575;'2017-June-08",
+      "Éso Pita;cde.fgh@exact.ly;'+56964956548;'2015-May-04"]
     actual = Amt.scan_files_sequentially(context[:tpath], context[:atmts_dir])
     assert actual == expected
 
