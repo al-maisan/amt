@@ -69,7 +69,7 @@ defmodule Amt do
   (where the fields are delimited by a ';').
   """
   def scan_file(path, show_pos \\ false) do
-    {:ok, body} = File.read(path)
+    {:ok, body} = File.open(path, fn(f) -> IO.read(f, 8192) end)
     {pos, name} = get_name(body)
     email = get_email(body)
     phone = "'" <> get_phone(body)
@@ -136,10 +136,14 @@ defmodule Amt do
   def get_name(txt) do
     txt = clean_utfs(txt)
     { :ok, rx } = Regex.compile(~S"You have received an application for (.+) from (.+)\s+View", "ums")
-    [_, pos, name] = Regex.run(rx, txt)
-    name = Enum.take(String.split(name) |> Enum.map(&String.capitalize/1), 3)
-    |> Enum.map(fn x -> Regex.replace(~R/[(),;:]/, x, "", [:global]) end)
-    {pos, Enum.join(name, " ")}
+    case Regex.run(rx, txt) do
+      [_, pos, name] ->
+        name = Enum.take(String.split(name)
+        |> Enum.map(&String.capitalize/1), 3)
+        |> Enum.map(fn x -> Regex.replace(~R/[(),;:]/, x, "", [:global]) end)
+        {pos, Enum.join(name, " ")}
+      nil -> {"N/A", "N/A"}
+    end
   end
 
 
