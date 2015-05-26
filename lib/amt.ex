@@ -123,7 +123,9 @@ defmodule Amt do
   end
 
   def massage_date_string(ds) do
-    [year, month, day] = Enum.reverse(Enum.take(Enum.drop(String.split(ds), 1), 3)) |> Enum.map(&String.capitalize/1)
+    [year, month, day] = String.split(ds)
+      |> Enum.drop(1) |> Enum.take(3) |> Enum.reverse
+      |> Enum.map(&String.capitalize/1)
     day = :lists.flatten(:io_lib.format("~2.10.0B", [String.to_integer(day)]))
     Enum.join([year, month, day], "-")
   end
