@@ -389,13 +389,14 @@ defmodule AmtMultiFilesTest do
     assert actual == expected
 
     expected_attachments = """
-      total 12K
-      4.0K Éso-Pita-1.csv
-      4.0K Éso-Pita-2.txt
+      4.0K Éso-Pita-1.txt
+      4.0K Éso-Pita-2.csv
       4.0K Éso-Pita.txt
+      total 12K
       """
-    {actual, 0} = System.cmd("ls", ["-sh", context[:atmts_dir]])
-    assert actual == expected_attachments
+    cmd = "ls -sh " <> context[:atmts_dir] <> " | sort"
+    actual = :os.cmd(to_char_list(cmd))
+    assert to_string(actual) == expected_attachments
   end
 
 
@@ -408,13 +409,14 @@ defmodule AmtMultiFilesTest do
     assert actual == expected
 
     expected_attachments = """
-      total 12K
-      4.0K Éso-Pita-1.csv
-      4.0K Éso-Pita-2.txt
+      4.0K Éso-Pita-1.txt
+      4.0K Éso-Pita-2.csv
       4.0K Éso-Pita.txt
+      total 12K
       """
-    {actual, 0} = System.cmd("ls", ["-sh", context[:atmts_dir]])
-    assert actual == expected_attachments
+    cmd = "ls -sh " <> context[:atmts_dir] <> " | sort"
+    actual = :os.cmd(to_char_list(cmd))
+    assert to_string(actual) == expected_attachments
   end
 
 
