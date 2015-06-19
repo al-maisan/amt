@@ -70,6 +70,8 @@ defmodule Amt do
   """
   def scan_file(path, show_pos \\ false) do
     {:ok, body} = File.open(path, fn(f) -> IO.read(f, 8192) end)
+    # strip out unnecessary data
+    body = Regex.replace(~R/Profile url:.+Connections/ums, body, "")
     {pos, name} = get_name(body)
     email = get_email(body)
     phone = "'" <> get_phone(body)
@@ -106,7 +108,7 @@ defmodule Amt do
   Extract the applicant's phone number from the LinkedIn email.
   """
   def get_phone(txt) do
-    {:ok, rx } = Regex.compile(~S"Phone:\s*(\+?[\d\s]+\d)", "ums")
+    {:ok, rx } = Regex.compile(~S"Phone:\s*(\+?[\d\s-]+\d)", "ums")
     case Regex.run(rx, txt) do
       [_, phone] -> phone
       nil -> "N/A"
@@ -217,14 +219,13 @@ defmodule Amt do
   @doc """
   Extract the attachments for a single saved email. These are extracted
   to a temporary directory and then moved to the target attachments directory
-  subesequently.
+  subsequently.
   When moving the files these are all (re)named after the applicant.
   """
   def extract_attachments(email_path, atmts_dir, {name, atmt_data}) do
     if length(atmt_data) > 0 do
       {temp_dir, 0} = System.cmd("mktemp", ["-d"])
       temp_dir = String.rstrip(temp_dir)
-      atmt_indices = atmt_data |> Enum.map(fn [i, _] -> i end)
       {_, 0} = System.cmd("mu", ["extract", "-a", "--target-dir=#{temp_dir}", email_path])
       move_attachments(temp_dir, atmts_dir, name)
       System.cmd("rm", ["-rf", temp_dir])
