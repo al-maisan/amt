@@ -4,7 +4,7 @@ defmodule Amt.Mixfile do
   def project do
     [app: :amt,
      version: "0.1.0-dev",
-     elixir: "~> 1.1-dev",
+     elixir: "~> 1.1.0-dev",
      source_url: "https://github.com/al-maisan/amt",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,

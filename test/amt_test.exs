@@ -67,6 +67,17 @@ defmodule AmtTest do
   end
 
 
+  test "applicants's name is extracted correctly 7" do
+    ts = """
+      Hi Joe,
+      You have received an application for IT disaster from kikei m=
+      arzipan
+      View all applicants: https://www.exact.com/e/v6?e=3Djfge4-fcgdkdfn-1e&am=
+      """
+    assert Amt.get_name(ts) == {"IT disaster", "Kikei Marzipan"}
+  end
+
+
   test "clean_utfs deals with the utf-8 bytes correctly" do
     ts1 = """
       Gulliver J=C3=B6=
