@@ -108,7 +108,7 @@ defmodule Amt do
   Extract the applicant's phone number from the LinkedIn email.
   """
   def get_phone(txt) do
-    {:ok, rx } = Regex.compile(~S"Phone:\s*(\+?[\d\s-]+\d)", "ums")
+    {:ok, rx } = Regex.compile(~S"Phone:\s*(\+?[\d\s\.-]+\d)", "ums")
     case Regex.run(rx, txt) do
       [_, phone] -> phone
       nil -> "N/A"
@@ -143,7 +143,7 @@ defmodule Amt do
     case Regex.run(rx, txt) do
       [_, pos, name] ->
         name = Enum.take(String.split(name)
-        |> Enum.map(&String.capitalize/1), 3)
+        |> Enum.map(&String.capitalize/1), 4)
         |> Enum.map(fn x -> Regex.replace(~R/[(),;:]/, x, "", [:global]) end)
         {pos, Enum.join(name, " ")}
       nil -> {"N/A", "N/A"}
