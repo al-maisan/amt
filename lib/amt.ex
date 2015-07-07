@@ -108,9 +108,9 @@ defmodule Amt do
   Extract the applicant's phone number from the LinkedIn email.
   """
   def get_phone(txt) do
-    {:ok, rx } = Regex.compile(~S"Phone:\s*(\+?[\d\s\.-]+\d)", "ums")
+    {:ok, rx } = Regex.compile(~S"Phone:\s*(\+?[\d\s\.()-]+\d)", "ums")
     case Regex.run(rx, txt) do
-      [_, phone] -> phone
+      [_, phone] -> Regex.replace(~R/\s*\(0\)\s*/, phone, " ", [:global])
       nil -> "N/A"
     end
   end
